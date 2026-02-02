@@ -9,10 +9,29 @@ type ChatRequest = {
 	messages?: ChatMessage[];
 };
 
+const corsHeaders = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "POST, OPTIONS",
+	"Access-Control-Allow-Headers": "Content-Type"
+};
+
 export default {
 	async fetch(request: Request, env: any): Promise<Response> {
+		// -------------------------------
+		// CORS preflight
+		// -------------------------------
+		if (request.method === "OPTIONS") {
+			return new Response(null, {
+				status: 204,
+				headers: corsHeaders
+			});
+		}
+
 		if (request.method !== "POST") {
-			return new Response("Send a POST request with messages", { status: 405 });
+			return new Response("Send a POST request with messages", {
+				status: 405,
+				headers: corsHeaders
+			});
 		}
 
 		const body = (await request.json()) as ChatRequest;
@@ -40,7 +59,7 @@ export default {
 		});
 
 		// -------------------------------
-		// Workflow-style orchestration
+		// Agent prompt construction
 		// -------------------------------
 		const systemMessage: ChatMessage = {
 			role: "system",
@@ -66,7 +85,10 @@ export default {
 		);
 
 		return new Response(JSON.stringify(response), {
-			headers: { "Content-Type": "application/json" }
+			headers: {
+				...corsHeaders,
+				"Content-Type": "application/json"
+			}
 		});
 	}
 };

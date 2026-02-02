@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Cloudflare AI Agent</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<style>
+		body {
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+			background: #0f172a;
+			color: #e5e7eb;
+			display: flex;
+			justify-content: center;
+			padding: 40px;
+		}
+
+		.chat {
+			width: 100%;
+			max-width: 600px;
+			background: #020617;
+			border-radius: 12px;
+			padding: 20px;
+			box-shadow: 0 0 30px rgba(0,0,0,0.4);
+		}
+
+		h2 {
+			margin-top: 0;
+			text-align: center;
+		}
+
+		.messages {
+			min-height: 300px;
+			margin-bottom: 12px;
+			overflow-y: auto;
+		}
+
+		.msg {
+			margin-bottom: 10px;
+			line-height: 1.4;
+		}
+
+		.user {
+			color: #38bdf8;
+		}
+
+		.agent {
+			color: #a3e635;
+		}
+
+		input {
+			width: 100%;
+			padding: 12px;
+			border-radius: 6px;
+			border: none;
+			outline: none;
+			font-size: 16px;
+		}
+	</style>
+</head>
+<body>
+<div class="chat">
+	<h2>Cloudflare AI Agent</h2>
+
+	<div id="messages" class="messages"></div>
+
+	<input
+			id="input"
+			placeholder="Ask something…"
+			autocomplete="off"
+	/>
+</div>
+
+<script>
+	const messagesDiv = document.getElementById("messages");
+	const input = document.getElementById("input");
+
+	// IMPORTANT: Worker must be running on this URL
+	const WORKER_URL = "http://localhost:8787";
+	const USER_ID = "bhumika";
+
+	function addMessage(text, cls) {
+		const div = document.createElement("div");
+		div.className = `msg ${cls}`;
+		div.textContent = text;
+		messagesDiv.appendChild(div);
+		messagesDiv.scrollTop = messagesDiv.scrollHeight;
+	}
+
+	input.addEventListener("keydown", async (e) => {
+		if (e.key !== "Enter" || !input.value.trim()) return;
+
+		const text = input.value;
+		input.value = "";
+
+		addMessage(`You: ${text}`, "user");
+		addMessage("Agent: typing…", "agent");
+
+		try {
+			const res = await fetch(`${WORKER_URL}?user=${USER_ID}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					messages: [{ role: "user", content: text }]
+				})
+			});
+
+			if (!res.ok) {
+				throw new Error(`HTTP ${res.status}`);
+			}
+
+			const data = await res.json();
+
+			// Remove "typing…" message
+			messagesDiv.lastChild.remove();
+
+			addMessage(`Agent: ${data.response}`, "agent");
+		} catch (err) {
+			messagesDiv.lastChild.remove();
+			console.error("Agent error:", err);
+			addMessage("Agent: ❌ Error talking to Worker", "agent");
+		}
+	});
+</script>
+
+</body>
+</html>
