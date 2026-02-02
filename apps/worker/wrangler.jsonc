@@ -1,0 +1,46 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+
+	"name": "cloudflare-ai-agent-worker",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-01-28",
+
+	"observability": {
+		"enabled": true
+	},
+
+	/**
+	 * Workers AI binding
+	 * https://developers.cloudflare.com/workers-ai/
+	 */
+	"ai": {
+		"binding": "AI"
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "MEMORY",
+				"class_name": "MemoryDO"
+			}
+		]
+	}
+	/**
+	 * Smart Placement
+	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	 */
+	// "placement": { "mode": "smart" }
+
+	/**
+	 * Environment Variables
+	 */
+	// "vars": { "MY_VARIABLE": "production_value" }
+
+	/**
+	 * Static Assets
+	 */
+	// "assets": { "directory": "./public/", "binding": "ASSETS" }
+}
